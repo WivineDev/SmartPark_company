@@ -76,117 +76,122 @@ const Reports = () => {
     };
 
     return (
-        <div className="space-y-8">
-            <div className="flex items-center justify-between no-print border-b pb-6 border-gray-200">
+        <div className="space-y-5">
+            <div className="flex items-end justify-between border-b pb-3 border-gray-200">
                 <div>
-                    <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight flex items-center">
-                        <FileText className="mr-4 text-smart-primary" size={40} />
+                    <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight flex items-center">
+                        <FileText className="mr-3 text-smart-primary" size={24} />
                         Payroll Reports
                     </h1>
+                    <p className="text-sm text-gray-500 mt-1">Generate and view monthly payroll summaries</p>
                 </div>
-                <div className="flex space-x-4">
+                <div className="flex space-x-3">
                     <button
                         onClick={handlePrint}
-                        className="flex items-center px-6 py-3 bg-white border border-gray-300 rounded-xl shadow-sm text-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                        className="flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors text-sm"
                     >
-                        <Printer size={20} className="mr-3" />
+                        <Printer size={16} className="mr-2" />
                         Print
                     </button>
                     <button
                         onClick={handleExport}
-                        className="flex items-center px-6 py-3 bg-smart-secondary text-white rounded-xl shadow-md text-lg font-bold hover:bg-green-600 transition-colors"
+                        className="flex items-center px-3 py-2 bg-smart-primary hover:bg-blue-800 text-white rounded-lg font-bold transition-colors shadow-sm text-sm"
                     >
-                        <Download size={20} className="mr-3" />
+                        <Download size={16} className="mr-2" />
                         Export PDF
                     </button>
                 </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden no-print">
-                <div className="p-8 border-b border-gray-100">
-                    <div className="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-6">
-                        <div className="flex-1 max-w-sm">
-                            <label className="block text-base font-semibold text-gray-700 mb-2">Filter by Month</label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <Filter size={20} className="text-gray-400" />
-                                </div>
-                                <select
-                                    value={filters.month}
-                                    onChange={(e) => setFilters(prev => ({ ...prev, month: e.target.value }))}
-                                    className="pl-12 block w-full border-gray-300 rounded-xl shadow-sm focus:ring-smart-secondary focus:border-smart-secondary py-3 px-4 border text-lg"
-                                >
-                                    <option value="">All Months</option>
-                                    {months.map(m => (
-                                        <option key={m} value={m}>{m}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="flex-1">
-                            <label className="block text-base font-semibold text-gray-700 mb-2">Search Employee</label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <Search size={20} className="text-gray-400" />
-                                </div>
-                                <input
-                                    type="text"
-                                    value={filters.search}
-                                    onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                                    placeholder="Search by name, position or department..."
-                                    className="pl-12 block w-full border-gray-300 rounded-xl shadow-sm focus:ring-smart-secondary focus:border-smart-secondary py-3 px-4 border text-lg"
-                                />
-                            </div>
-                        </div>
+            {/* Filters */}
+            <div className="bg-white rounded-xl shadow-md border border-gray-100 p-5">
+                <div className="flex flex-col md:flex-row md:items-end gap-4">
+                    <div className="w-full md:w-64">
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">Select Month</label>
+                        <select
+                            name="month"
+                            value={filters.month}
+                            onChange={(e) => setFilters({ ...filters, month: e.target.value })}
+                            className="block w-full border-gray-300 rounded-lg shadow-sm focus:ring-smart-secondary focus:border-smart-secondary py-1.5 px-3 border text-sm"
+                        >
+                            <option value="">-- All Months --</option>
+                            {months.map(m => (
+                                <option key={m} value={m}>{m}</option>
+                            ))}
+                        </select>
                     </div>
                 </div>
             </div>
 
-            {/* Report Table */}
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden print-section">
-                <div className="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                    <h3 className="text-xl font-bold text-gray-800">Monthly Payroll Report</h3>
-                    {filters.month && <span className="text-base font-bold text-smart-primary bg-blue-100 px-4 py-2 rounded-full">{filters.month}</span>}
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-8 py-4 text-left text-sm font-bold text-gray-500 uppercase tracking-wider">Employee Name</th>
-                                <th className="px-8 py-4 text-left text-sm font-bold text-gray-500 uppercase tracking-wider">Position</th>
-                                <th className="px-8 py-4 text-left text-sm font-bold text-gray-500 uppercase tracking-wider">Department</th>
-                                <th className="px-8 py-4 text-left text-sm font-bold text-gray-500 uppercase tracking-wider">Period</th>
-                                <th className="px-8 py-4 text-right text-sm font-bold text-gray-500 uppercase tracking-wider">Net Salary</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {filteredData.length > 0 ? (
-                                filteredData.map((item, index) => (
-                                    <tr key={index} className="hover:bg-blue-50/50 transition-colors">
-                                        <td className="px-8 py-5 whitespace-nowrap text-lg font-bold text-gray-900">{item.firstName} {item.lastName}</td>
-                                        <td className="px-8 py-5 whitespace-nowrap text-lg text-gray-600">{item.position}</td>
-                                        <td className="px-8 py-5 whitespace-nowrap text-lg text-gray-600">{item.departmentName}</td>
-                                        <td className="px-8 py-5 whitespace-nowrap text-lg text-gray-600">{item.month}</td>
-                                        <td className="px-8 py-5 whitespace-nowrap text-right text-lg font-bold text-gray-900">${item.net.toLocaleString()}</td>
+            {/* Report Content */}
+            <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden min-h-[400px]">
+                {filteredData.length > 0 ? (
+                    <div>
+                        <div className="px-5 py-3 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                            <h3 className="text-base font-bold text-gray-800">
+                                Payroll Summary {filters.month && `- ${filters.month}`}
+                            </h3>
+                            <span className="bg-green-100 text-green-800 text-xs font-bold px-3 py-1 rounded-full">
+                                {filteredData.length} Records Found
+                            </span>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Employee</th>
+                                        <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Department</th>
+                                        <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Month</th>
+                                        <th className="px-5 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Gross</th>
+                                        <th className="px-5 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Deduction</th>
+                                        <th className="px-5 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Net Salary</th>
                                     </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan="5" className="px-8 py-8 text-center text-lg text-gray-500">No records found.</td>
-                                </tr>
-                            )}
-                        </tbody>
-                        <tfoot className="bg-gray-50">
-                            <tr>
-                                <td colSpan="4" className="px-8 py-6 text-right text-xl font-bold text-gray-900 border-t-2 border-gray-200">Total Net Payout:</td>
-                                <td className="px-8 py-6 text-right text-xl font-extrabold text-smart-secondary border-t-2 border-gray-200">
-                                    ${filteredData.reduce((acc, curr) => acc + curr.net, 0).toLocaleString()}
-                                </td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {filteredData.map((item, index) => (
+                                        <tr key={index} className="hover:bg-blue-50/50 transition-colors">
+                                            <td className="px-5 py-3 whitespace-nowrap">
+                                                <div className="flex items-center">
+                                                    <div className="text-sm font-bold text-gray-900">{item.firstName} {item.lastName}</div>
+                                                </div>
+                                                <div className="text-xs text-gray-500">{item.position}</div>
+                                            </td>
+                                            <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-600">
+                                                <span className="px-2 py-0.5 inline-flex text-xs leading-4 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                                    {item.departmentName}
+                                                </span>
+                                            </td>
+                                            <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-600">{item.month}</td>
+                                            <td className="px-5 py-3 whitespace-nowrap text-sm text-right font-medium text-gray-600">${parseFloat(item.grossSalary || 0).toLocaleString()}</td>
+                                            <td className="px-5 py-3 whitespace-nowrap text-sm text-right font-medium text-red-600">-${parseFloat(item.totalDeduction || 0).toLocaleString()}</td>
+                                            <td className="px-5 py-3 whitespace-nowrap text-sm text-right font-bold text-green-600">${parseFloat(item.netSalary || 0).toLocaleString()}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                                <tfoot className="bg-gray-50">
+                                    <tr>
+                                        <td colSpan="3" className="px-5 py-3 text-sm font-bold text-gray-900 text-right">Totals:</td>
+                                        <td className="px-5 py-3 whitespace-nowrap text-sm font-bold text-gray-900 text-right">
+                                            ${filteredData.reduce((acc, curr) => acc + parseFloat(curr.grossSalary || 0), 0).toLocaleString()}
+                                        </td>
+                                        <td className="px-5 py-3 whitespace-nowrap text-sm font-bold text-red-600 text-right">
+                                            -${filteredData.reduce((acc, curr) => acc + parseFloat(curr.totalDeduction || 0), 0).toLocaleString()}
+                                        </td>
+                                        <td className="px-5 py-3 whitespace-nowrap text-sm font-bold text-green-600 text-right">
+                                            ${filteredData.reduce((acc, curr) => acc + parseFloat(curr.netSalary || 0), 0).toLocaleString()}
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+                        <FileText size={32} className="text-gray-300 mb-4" />
+                        <p className="text-base font-medium">No records found used the selected criteria.</p>
+                        <p className="text-xs">Try selecting a different month.</p>
+                    </div>
+                )}
             </div>
             <style>{`
                 @media print {
@@ -194,7 +199,7 @@ const Reports = () => {
                     .print-section { box-shadow: none; border: none; }
                     body { background: white; }
                      /* Ensure sidebar is hidden in print */
-                    .h-screen.w-64, .fixed.left-0 { display: none; }
+                    .h-screen.w-60, .fixed.left-0 { display: none; }
                     main { margin-left: 0 !important; padding: 0 !important; }
                 }
             `}</style>
