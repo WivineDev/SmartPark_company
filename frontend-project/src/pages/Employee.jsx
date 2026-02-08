@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
-import { Users, UserPlus, Search } from 'lucide-react';
+import { Users, UserPlus, Search, Edit, Trash2 } from 'lucide-react';
 
 const Employee = () => {
     const [employees, setEmployees] = useState([]);
@@ -22,6 +22,7 @@ const Employee = () => {
     };
 
     const [formData, setFormData] = useState(initialFormState);
+    const [isEditing, setIsEditing] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -45,15 +46,53 @@ const Employee = () => {
         setLoading(true);
         setMessage(null);
         try {
-            await api.addEmployee(formData);
-            setMessage({ type: 'success', text: 'Employee registered successfully' });
+            if (isEditing) {
+                await api.updateEmployee(formData.employeeNumber, formData);
+                setMessage({ type: 'success', text: 'Employee updated successfully' });
+            } else {
+                await api.addEmployee(formData);
+                setMessage({ type: 'success', text: 'Employee registered successfully' });
+            }
             setFormData(initialFormState);
+            setIsEditing(false);
             loadData();
         } catch (error) {
-            setMessage({ type: 'error', text: 'Failed to register employee' });
+            setMessage({ type: 'error', text: isEditing ? 'Failed to update employee' : 'Failed to register employee' });
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleEdit = (emp) => {
+        setFormData({
+            employeeNumber: emp.employeeNumber || emp.id,
+            firstName: emp.firstName,
+            lastName: emp.lastName,
+            position: emp.position,
+            address: emp.address,
+            telephone: emp.telephone,
+            gender: emp.gender,
+            hiredDate: emp.hiredDate ? emp.hiredDate.split('T')[0] : '',
+            departmentCode: emp.departmentCode || emp.department
+        });
+        setIsEditing(true);
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this employee?')) return;
+        try {
+            await api.deleteEmployee(id);
+            setMessage({ type: 'success', text: 'Employee deleted successfully' });
+            loadData();
+        } catch (error) {
+            setMessage({ type: 'error', text: 'Failed to delete employee' });
+        }
+    };
+
+    const handleCancelEdit = () => {
+        setFormData(initialFormState);
+        setIsEditing(false);
+        setMessage(null);
     };
 
     return (
@@ -74,7 +113,7 @@ const Employee = () => {
                     <div className="bg-white rounded-xl shadow-md border border-gray-100 p-5 sticky top-6">
                         <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
                             <UserPlus size={18} className="mr-2 text-smart-secondary" />
-                            New Employee
+                            {isEditing ? 'Edit Employee' : 'New Employee'}
                         </h2>
                         {message && (
                             <div className={`p-3 rounded-lg mb-4 text-xs font-medium ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
@@ -91,7 +130,8 @@ const Employee = () => {
                                         value={formData.employeeNumber}
                                         onChange={handleChange}
                                         required
-                                        className="block w-full border-gray-300 rounded-lg shadow-sm focus:ring-smart-secondary focus:border-smart-secondary py-1.5 px-3 border text-sm"
+                                        disabled={isEditing}
+                                        className={`block w-full border-gray-300 rounded-lg shadow-sm focus:ring-smart-secondary focus:border-smart-secondary py-1.5 px-3 border text-sm ${isEditing ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                                     />
                                 </div>
                                 <div>
@@ -212,14 +252,14 @@ const Employee = () => {
                                     disabled={loading}
                                     className="flex-1 flex justify-center py-2 px-3 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-smart-secondary hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-smart-secondary transition-colors"
                                 >
-                                    {loading ? 'Saving...' : 'Register'}
+                                    {loading ? 'Saving...' : (isEditing ? 'Update' : 'Register')}
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => setFormData(initialFormState)}
+                                    onClick={handleCancelEdit}
                                     className="flex-1 flex justify-center py-2 px-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
                                 >
-                                    Clear
+                                    {isEditing ? 'Cancel' : 'Clear'}
                                 </button>
                             </div>
                         </form>
@@ -250,6 +290,7 @@ const Employee = () => {
                                         <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Name</th>
                                         <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Position</th>
                                         <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Dept</th>
+                                        <th className="px-5 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
@@ -263,6 +304,20 @@ const Employee = () => {
                                                     <span className="px-2 py-0.5 inline-flex text-xs leading-4 font-semibold rounded-full bg-blue-100 text-blue-800">
                                                         {emp.departmentCode || emp.department}
                                                     </span>
+                                                </td>
+                                                <td className="px-5 py-3 whitespace-nowrap text-right text-sm font-medium">
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleEdit(emp); }}
+                                                        className="text-indigo-600 hover:text-indigo-900 mr-3"
+                                                    >
+                                                        <Edit size={18} />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleDelete(emp.employeeNumber || emp.id); }}
+                                                        className="text-red-600 hover:text-red-900"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
                                                 </td>
                                             </tr>
                                         ))

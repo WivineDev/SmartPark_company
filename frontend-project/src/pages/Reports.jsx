@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { FileText, Printer, Download, Search, Filter } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const Reports = () => {
     const [salaries, setSalaries] = useState([]);
@@ -72,7 +74,63 @@ const Reports = () => {
     };
 
     const handleExport = () => {
-        alert('Export to PDF functionality would start download here.');
+        const doc = new jsPDF();
+
+        // Add Title
+        doc.setFontSize(18);
+        doc.text('SmartPark Payroll Report', 14, 22);
+
+        // Add Month Filter Info
+        doc.setFontSize(12);
+        doc.setTextColor(100);
+        const reportTitle = filters.month ? `Monthly Payroll Summary: ${filters.month}` : 'Payroll Summary (All Months)';
+        doc.text(reportTitle, 14, 30);
+
+        // Create Table Data
+        const tableColumn = ["Employee", "Department", "Month", "Gross ($)", "Deduction ($)", "Net Salary ($)"];
+        const tableRows = [];
+
+        filteredData.forEach(item => {
+            const rowData = [
+                `${item.firstName} ${item.lastName}\n${item.position}`,
+                item.departmentName,
+                item.month,
+                parseFloat(item.grossSalary || 0).toLocaleString(),
+                parseFloat(item.totalDeduction || 0).toLocaleString(),
+                parseFloat(item.netSalary || 0).toLocaleString()
+            ];
+            tableRows.push(rowData);
+        });
+
+        // Add Totals Row
+        const totalGross = filteredData.reduce((acc, curr) => acc + parseFloat(curr.grossSalary || 0), 0).toLocaleString();
+        const totalDeduction = filteredData.reduce((acc, curr) => acc + parseFloat(curr.totalDeduction || 0), 0).toLocaleString();
+        const totalNet = filteredData.reduce((acc, curr) => acc + parseFloat(curr.netSalary || 0), 0).toLocaleString();
+
+        tableRows.push([
+            { content: 'TOTALS', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold' } },
+            { content: totalGross, styles: { fontStyle: 'bold' } },
+            { content: totalDeduction, styles: { fontStyle: 'bold', textColor: [200, 0, 0] } },
+            { content: totalNet, styles: { fontStyle: 'bold', textColor: [0, 100, 0] } }
+        ]);
+
+        autoTable(doc, {
+            head: [tableColumn],
+            body: tableRows,
+            startY: 40,
+            theme: 'striped',
+            headStyles: { fillColor: [43, 63, 229], textColor: 255 },
+            footStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold' },
+            bodyStyles: { fontSize: 9 },
+            columnStyles: {
+                3: { halign: 'right' },
+                4: { halign: 'right' },
+                5: { halign: 'right' }
+            }
+        });
+
+        const fileName = filters.month ? `Payroll_Report_${filters.month}.pdf` : 'Payroll_Report_All.pdf';
+        doc.save(fileName);
     };
 
     return (

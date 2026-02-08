@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
-import { Building, Plus, DollarSign } from 'lucide-react';
+import { Building, Plus, DollarSign, Edit, Trash2 } from 'lucide-react';
 
 const Department = () => {
     const [departments, setDepartments] = useState([]);
@@ -12,6 +12,7 @@ const Department = () => {
     });
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState(null);
+    const [isEditing, setIsEditing] = useState(false);
 
     useEffect(() => {
         loadDepartments();
@@ -31,15 +32,48 @@ const Department = () => {
         setLoading(true);
         setMessage(null);
         try {
-            await api.addDepartment(formData);
-            setMessage({ type: 'success', text: 'Department added successfully' });
+            if (isEditing) {
+                await api.updateDepartment(formData.departmentCode, formData);
+                setMessage({ type: 'success', text: 'Department updated successfully' });
+            } else {
+                await api.addDepartment(formData);
+                setMessage({ type: 'success', text: 'Department added successfully' });
+            }
             setFormData({ departmentCode: '', departmentName: '', grossSalary: '', totalDeduction: '' });
+            setIsEditing(false);
             loadDepartments();
         } catch (error) {
-            setMessage({ type: 'error', text: 'Failed to add department' });
+            setMessage({ type: 'error', text: isEditing ? 'Failed to update department' : 'Failed to add department' });
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleEdit = (dept) => {
+        setFormData({
+            departmentCode: dept.departmentCode || dept.code,
+            departmentName: dept.departmentName || dept.name,
+            grossSalary: dept.grossSalary || '',
+            totalDeduction: dept.totalDeduction || ''
+        });
+        setIsEditing(true);
+    };
+
+    const handleDelete = async (code) => {
+        if (!window.confirm('Are you sure you want to delete this department?')) return;
+        try {
+            await api.deleteDepartment(code);
+            setMessage({ type: 'success', text: 'Department deleted successfully' });
+            loadDepartments();
+        } catch (error) {
+            setMessage({ type: 'error', text: 'Failed to delete department. It might contain employees.' });
+        }
+    };
+
+    const handleCancelEdit = () => {
+        setFormData({ departmentCode: '', departmentName: '', grossSalary: '', totalDeduction: '' });
+        setIsEditing(false);
+        setMessage(null);
     };
 
     return (
@@ -58,7 +92,7 @@ const Department = () => {
                 {/* Form Section */}
                 <div className="lg:col-span-1">
                     <div className="bg-white rounded-xl shadow-md border border-gray-100 p-5 sticky top-6">
-                        <h2 className="text-lg font-bold text-gray-800 mb-4">Add Department</h2>
+                        <h2 className="text-lg font-bold text-gray-800 mb-4">{isEditing ? 'Edit Department' : 'Add Department'}</h2>
                         {message && (
                             <div className={`p-3 rounded-lg mb-4 text-xs font-medium ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
                                 {message.text}
@@ -74,7 +108,8 @@ const Department = () => {
                                     onChange={handleChange}
                                     placeholder="e.g. IT"
                                     required
-                                    className="block w-full border-gray-300 rounded-lg shadow-sm focus:ring-smart-secondary focus:border-smart-secondary py-1.5 px-3 border text-sm"
+                                    disabled={isEditing}
+                                    className={`block w-full border-gray-300 rounded-lg shadow-sm focus:ring-smart-secondary focus:border-smart-secondary py-1.5 px-3 border text-sm ${isEditing ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                                 />
                             </div>
                             <div>
@@ -105,14 +140,25 @@ const Department = () => {
                                     />
                                 </div>
                             </div>
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full flex justify-center items-center py-2 px-3 border border-transparent rounded-lg shadow-md text-sm font-bold text-white bg-smart-primary hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-smart-secondary transition-colors mt-2"
-                            >
-                                <Plus size={18} className="mr-2" />
-                                Add Department
-                            </button>
+                            <div className="flex gap-2">
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="flex-1 flex justify-center items-center py-2 px-3 border border-transparent rounded-lg shadow-md text-sm font-bold text-white bg-smart-primary hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-smart-secondary transition-colors mt-2"
+                                >
+                                    {isEditing ? <Edit size={18} className="mr-2" /> : <Plus size={18} className="mr-2" />}
+                                    {isEditing ? 'Update' : 'Add'}
+                                </button>
+                                {isEditing && (
+                                    <button
+                                        type="button"
+                                        onClick={handleCancelEdit}
+                                        className="flex-1 flex justify-center items-center py-2 px-3 border border-gray-300 rounded-lg shadow-md text-sm font-bold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors mt-2"
+                                    >
+                                        Cancel
+                                    </button>
+                                )}
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -131,6 +177,7 @@ const Department = () => {
                                         <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Name</th>
                                         <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Budget</th>
                                         <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Deductions</th>
+                                        <th className="px-5 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
@@ -141,6 +188,20 @@ const Department = () => {
                                                 <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-800 font-medium">{dept.departmentName || dept.name}</td>
                                                 <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-600">{dept.grossSalary || '-'}</td>
                                                 <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-600">{dept.totalDeduction || '-'}</td>
+                                                <td className="px-5 py-3 whitespace-nowrap text-right text-sm font-medium">
+                                                    <button
+                                                        onClick={() => handleEdit(dept)}
+                                                        className="text-indigo-600 hover:text-indigo-900 mr-3"
+                                                    >
+                                                        <Edit size={18} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(dept.departmentCode || dept.code)}
+                                                        className="text-red-600 hover:text-red-900"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                </td>
                                             </tr>
                                         ))
                                     ) : (

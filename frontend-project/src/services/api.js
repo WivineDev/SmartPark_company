@@ -65,7 +65,17 @@ export const api = {
 
     addEmployee: async (employee) => {
         const response = await apiClient.post('/employees', employee);
-        return response.data.data || employee; // Should return created employee ideally, but controller might not currently return it.
+        return response.data.data || employee;
+    },
+
+    updateEmployee: async (id, employee) => {
+        const response = await apiClient.put(`/employees/${id}`, employee);
+        return response.data.data || employee;
+    },
+
+    deleteEmployee: async (id) => {
+        const response = await apiClient.delete(`/employees/${id}`);
+        return response.data;
     },
 
     // Departments
@@ -77,6 +87,16 @@ export const api = {
     addDepartment: async (department) => {
         const response = await apiClient.post('/departments', department);
         return response.data.data || department;
+    },
+
+    updateDepartment: async (code, department) => {
+        const response = await apiClient.put(`/departments/${code}`, department);
+        return response.data.data || department;
+    },
+
+    deleteDepartment: async (code) => {
+        const response = await apiClient.delete(`/departments/${code}`);
+        return response.data;
     },
 
     // Salaries

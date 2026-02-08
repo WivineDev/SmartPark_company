@@ -2,13 +2,14 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, Building, DollarSign, FileText, LogOut } from 'lucide-react';
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, toggleSidebar }) => {
     const navigate = useNavigate();
     const location = useLocation();
 
     const handleLogout = () => {
         localStorage.removeItem('token');
         navigate('/login');
+        if (toggleSidebar) toggleSidebar();
     };
 
     const isActive = (path) => {
@@ -20,6 +21,7 @@ const Sidebar = () => {
     const NavItem = ({ to, icon: Icon, label }) => (
         <Link
             to={to}
+            onClick={() => { if (window.innerWidth < 1024) toggleSidebar(); }}
             className={`flex items-center px-4 py-3 text-sm font-medium transition-all duration-200 rounded-lg mb-1 mx-2 ${isActive(to)}`}
         >
             <Icon size={20} className="mr-3" />
@@ -28,8 +30,9 @@ const Sidebar = () => {
     );
 
     return (
-        <div className="h-screen w-60 bg-smart-primary text-white flex flex-col fixed left-0 top-0 shadow-xl z-20 transition-all duration-300">
-            <div className="p-5 border-b border-white/10">
+        <div className={`h-screen w-60 bg-smart-primary text-white flex flex-col fixed left-0 top-0 shadow-xl z-40 transition-all duration-300 transform 
+            ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:h-screen lg:z-20`}>
+            <div className="p-5 border-b border-white/10 flex items-center justify-between">
                 <Link to="/dashboard" className="flex items-center space-x-3">
                     <div className="bg-white p-1.5 rounded-md">
                         <LayoutDashboard size={24} className="text-smart-primary" />
